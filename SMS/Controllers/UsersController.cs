@@ -41,11 +41,25 @@ namespace SMS.Controllers
         }
 
         //POST Method
-        //[HttpPost]
-        //public Response Login(LoginViewModel model)
-        //{
+        [HttpPost]
+        public Response Login(LoginViewModel model)
+        {
+            Request.Session.Clear();
 
-        //}
+            string id = userService.Login(model);
+
+            if (id == null)
+            {
+                return View(new { ErrorMessage = "Incorrect Login" }, "/Error");
+            }
+
+            SignIn(id);
+
+            CookieCollection cookies = new CookieCollection();
+            cookies.Add(Session.SessionCookieName, Request.Session.Id);
+
+            return Redirect("/");
+        }
 
         //POST Method
         [HttpPost]
@@ -59,6 +73,14 @@ namespace SMS.Controllers
             }
 
             return View(new { ErrorMessage = error }, "/Error");
+        }
+
+        [Authorize]
+        public Response Logout()
+        {
+            SignOut();
+
+            return Redirect("/");
         }
 
     }

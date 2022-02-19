@@ -15,17 +15,36 @@ namespace SMS.Services
     public class UserService : IUserService
     {
         private readonly IRepository repo;
+        private readonly IValidationService validationService;
 
-        public UserService(IRepository _repo)
+        public UserService(IRepository _repo, IValidationService _validationService)
         {
             repo = _repo;
+            validationService = _validationService;
         }
+
+        public string GetUsername(string userId)
+        {
+            return repo.All<User>()
+                .FirstOrDefault(u => u.Id == userId)?.Username;
+        }
+
+        public string Login(LoginViewModel model)
+        {
+            var user = repo.All<User>()
+                .Where(u=> u.Username == model.Username)
+                .Where(u=> u.Password == CalculateHash(model.Password))
+                .SingleOrDefault();
+
+            return user?.Id;
+        }
+
         public (bool registered, string error) Register(RegisterViewModel model)
         {
             bool registered = false;
             string error = null;
 
-            var (isValid, validationError) = ValidateRegisterModel(model);
+            var (isValid, validationError) = validationService.ValidateModel(model);
 
             if (!isValid)
             {
@@ -55,23 +74,6 @@ namespace SMS.Services
             }
 
             return (registered, error);
-        }
-
-        private (bool isValid, string error) ValidateRegisterModel(RegisterViewModel model)
-        {
-            var context = new ValidationContext(model);
-            var errorResult = new List<ValidationResult>();
-
-            bool isValid = Validator.TryValidateObject(model, context, errorResult, true);
-
-            if(isValid)
-            {
-                return (isValid, null);
-            }
-
-            string error = String.Join(',', errorResult.Select(e => e.ErrorMessage));
-
-            return (isValid, error);
         }
 
         private string CalculateHash(string password)
