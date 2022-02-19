@@ -4,6 +4,7 @@ using SMS.Data.Models;
 using SMS.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -56,6 +57,23 @@ namespace SMS.Services
             return (registered, error);
         }
 
+        private (bool isValid, string error) ValidateRegisterModel(RegisterViewModel model)
+        {
+            var context = new ValidationContext(model);
+            var errorResult = new List<ValidationResult>();
+
+            bool isValid = Validator.TryValidateObject(model, context, errorResult, true);
+
+            if(isValid)
+            {
+                return (isValid, null);
+            }
+
+            string error = String.Join(',', errorResult.Select(e => e.ErrorMessage));
+
+            return (isValid, error);
+        }
+
         private string CalculateHash(string password)
         {
             byte[] passwordArray = Encoding.UTF8.GetBytes(password);
@@ -65,42 +83,42 @@ namespace SMS.Services
             }
         }
 
-        private (bool isValid, string error) ValidateRegisterModel(RegisterViewModel model)
-        {
-            bool isValid = true;
-            StringBuilder error = new StringBuilder();
+        //private (bool isValid, string error) ValidateRegisterModel(RegisterViewModel model)
+        //{
+        //    bool isValid = true;
+        //    StringBuilder error = new StringBuilder();
 
-            if (model == null)
-            {
-                return (false, "Register model is required");
-            }
+        //    if (model == null)
+        //    {
+        //        return (false, "Register model is required");
+        //    }
 
-            if (string.IsNullOrEmpty(model.Username) || model.Username.Length < 5 || model.Username.Length > 20)
-            {
-                isValid = false;
-                error.AppendLine("Username must be between 5 and 20 characters long");
-            }
+        //    if (string.IsNullOrEmpty(model.Username) || model.Username.Length < 5 || model.Username.Length > 20)
+        //    {
+        //        isValid = false;
+        //        error.AppendLine("Username must be between 5 and 20 characters long");
+        //    }
 
-            if (string.IsNullOrEmpty(model.Email))
-            {
-                isValid = false;
-                error.AppendLine("Email must be valid email");
-            }
+        //    if (string.IsNullOrEmpty(model.Email))
+        //    {
+        //        isValid = false;
+        //        error.AppendLine("Email must be valid email");
+        //    }
 
-            if(string.IsNullOrEmpty(model.Password) || model.Password.Length < 6 || model.Password.Length > 20)
-            {
-                isValid = false;
-                error.AppendLine("Password must be between 6 and 20 characters long");
-            }
+        //    if(string.IsNullOrEmpty(model.Password) || model.Password.Length < 6 || model.Password.Length > 20)
+        //    {
+        //        isValid = false;
+        //        error.AppendLine("Password must be between 6 and 20 characters long");
+        //    }
 
-            if (model.Password != model.ConfirmPassword)
-            {
-                isValid = false;
-                error.AppendLine("Password and ConfirmPassword must be equal");
-            }
+        //    if (model.Password != model.ConfirmPassword)
+        //    {
+        //        isValid = false;
+        //        error.AppendLine("Password and ConfirmPassword must be equal");
+        //    }
 
-            return (isValid, error.ToString());
-        }
+        //    return (isValid, error.ToString());
+        //}
     }
 }
 
